@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     ANTHROPIC_API_KEY: str = ""
     DEFAULT_LLM_MODEL: str = "claude-3-5-sonnet-20241022"
+    LLM_PROVIDER: str = "ollama"  # Pilihan: 'ollama' atau 'anthropic'
+    OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"
+    OLLAMA_MODEL: str = "qwen2.5:1.5b"
     APP_PORT: int = 8000
     ALLOWED_ENTITIES: List[str] = ["SG", "VN", "KR", "IN", "JP"]
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]

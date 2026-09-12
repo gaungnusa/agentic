@@ -457,9 +457,42 @@ async def lookup_db_data(pool, intent: str, params: dict, entity_code: str) -> D
 # INTENT CLASSIFIER (CLAUDE API + FALLBACK)
 # ============================================================================
 async def classify_intent(message: str, entity_code: str) -> Dict[str, Any]:
-    """Uses Claude API for intent classification. Falls back to keyword matching."""
+    """Uses Ollama (local) or Claude API for intent classification. Falls back to keyword matching."""
+    provider = getattr(settings, "LLM_PROVIDER", "ollama").lower().strip()
+
+    # 1. Ollama Intent Classifier
+    if provider == "ollama":
+        base_url = (getattr(settings, "OLLAMA_BASE_URL", "http://127.0.0.1:11434") or "http://127.0.0.1:11434").rstrip("/")
+        model_name = getattr(settings, "OLLAMA_MODEL", "qwen2.5:1.5b")
+        try:
+            async with httpx.AsyncClient(timeout=12.0) as client:
+                response = await client.post(
+                    f"{base_url}/v1/chat/completions",
+                    json={
+                        "model": model_name,
+                        "messages": [
+                            {"role": "system", "content": INTENT_SYSTEM_PROMPT},
+                            {"role": "user", "content": f"Entity aktif: {entity_code}\nPesan user: {message}"}
+                        ],
+                        "temperature": 0.1
+                    }
+                )
+                if response.status_code == 200:
+                    text = response.json()["choices"][0]["message"]["content"].strip()
+                    if text.startswith("```"):
+                        text = text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+                    # Menangani kemungkinan output JSON diawali dengan teks bebas
+                    first_brace = text.find("{")
+                    last_brace = text.rfind("}")
+                    if first_brace != -1 and last_brace != -1:
+                        text = text[first_brace:last_brace+1]
+                    return json.loads(text)
+        except Exception as e:
+            logger.warning(f"[CHAT] Ollama intent classification failed ({e}). Using keyword fallback.")
+            return keyword_intent_fallback(message)
+
+    # 2. Claude API Intent Classifier
     api_key = (settings.ANTHROPIC_API_KEY or "").strip()
-    
     if api_key and api_key not in ("your_anthropic_api_key_here", "none", "null", ""):
         try:
             async with httpx.AsyncClient(timeout=8.0) as client:
@@ -482,6 +515,10 @@ async def classify_intent(message: str, entity_code: str) -> Dict[str, Any]:
                     # Clean potential markdown wrapping
                     if text.startswith("```"): 
                         text = text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+                    first_brace = text.find("{")
+                    last_brace = text.rfind("}")
+                    if first_brace != -1 and last_brace != -1:
+                        text = text[first_brace:last_brace+1]
                     return json.loads(text)
         except Exception as e:
             logger.warning(f"[CHAT] Claude intent classification failed ({e}). Using keyword fallback.")

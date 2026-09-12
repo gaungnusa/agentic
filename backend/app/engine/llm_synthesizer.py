@@ -117,17 +117,13 @@ def build_local_fallback_narrative(agent_id: str, entity_code: str, data: dict, 
     )
 
 async def generate_grounded_draft(agent_id: str, entity_code: str, deterministic_data: dict, raw_context: str) -> str:
-    """Sintesis bahasa alami dengan Claude API grounded pada JSON deterministik, dengan fallback lokal tahan banting."""
-    api_key = (settings.ANTHROPIC_API_KEY or "").strip()
-
-    # Jika API key kosong atau masih bernilai placeholder dummy
-    if not api_key or api_key in ("your_anthropic_api_key_here", "none", "null"):
-        return build_local_fallback_narrative(agent_id, entity_code, deterministic_data, raw_context)
+    """Sintesis bahasa alami dengan Ollama (default lokal) atau Claude API grounded pada JSON deterministik, dengan fallback lokal tahan banting."""
+    provider = getattr(settings, "LLM_PROVIDER", "ollama").lower().strip()
 
     system_prompt = (
         "Anda adalah AI Orchestrator untuk Batu Networks ERP. "
         "Gunakan HANYA data deterministik yang disediakan. Jangan mengarang angka atau persentase di luar JSON. "
-        "Format teks harus profesional, padat, dan langsung menyajikan rekomendasi tindakan serta draf korespondensi resmi."
+        "Format teks harus profesional, padat, dan langsung menyajikan rekomendasi tindakan serta draf korespondensi resmi dalam Bahasa Indonesia."
     )
 
     user_content = (
@@ -137,8 +133,40 @@ async def generate_grounded_draft(agent_id: str, entity_code: str, deterministic
         f"Konteks Tambahan: {raw_context}"
     )
 
+    # 1. Provider: OLLAMA (Local Self-Hosted di VPS)
+    if provider == "ollama":
+        base_url = (getattr(settings, "OLLAMA_BASE_URL", "http://127.0.0.1:11434") or "http://127.0.0.1:11434").rstrip("/")
+        model_name = getattr(settings, "OLLAMA_MODEL", "qwen2.5:1.5b")
+        try:
+            async with httpx.AsyncClient(timeout=25.0) as client:
+                response = await client.post(
+                    f"{base_url}/v1/chat/completions",
+                    json={
+                        "model": model_name,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_content}
+                        ],
+                        "temperature": 0.2
+                    }
+                )
+                if response.status_code == 200:
+                    res_json = response.json()
+                    return res_json["choices"][0]["message"]["content"].strip()
+                else:
+                    logger.warning(f"[LLM] Ollama returned HTTP {response.status_code}. Fallback ke narasi lokal.")
+                    return build_local_fallback_narrative(agent_id, entity_code, deterministic_data, raw_context)
+        except Exception as err:
+            logger.warning(f"[LLM] Gagal menghubungi Ollama ({type(err).__name__}). Menggunakan narasi deterministik lokal.")
+            return build_local_fallback_narrative(agent_id, entity_code, deterministic_data, raw_context)
+
+    # 2. Provider: ANTHROPIC CLAUDE API
+    api_key = (settings.ANTHROPIC_API_KEY or "").strip()
+    if not api_key or api_key in ("your_anthropic_api_key_here", "none", "null"):
+        return build_local_fallback_narrative(agent_id, entity_code, deterministic_data, raw_context)
+
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=15.0) as client:
             response = await client.post(
                 "https://api.anthropic.com/v1/messages",
                 headers={
@@ -155,7 +183,7 @@ async def generate_grounded_draft(agent_id: str, entity_code: str, deterministic
             )
             if response.status_code == 200:
                 res_json = response.json()
-                return res_json["content"][0]["text"]
+                return res_json["content"][0]["text"].strip()
             else:
                 logger.warning(f"[LLM] Anthropic API returned HTTP {response.status_code}. Fallback ke narasi lokal.")
                 return build_local_fallback_narrative(agent_id, entity_code, deterministic_data, raw_context)

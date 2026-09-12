@@ -103,6 +103,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         setConversationId(data.conversation_id);
       }
 
+      if (data.switch_entity && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('batu:switch-entity', { detail: data.switch_entity }));
+      }
+
       const assistantMsg: ChatMessage = {
         id: `asst-${Date.now()}`,
         role: 'assistant',

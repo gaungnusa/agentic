@@ -9,6 +9,7 @@ from app.engine.deterministic import (
     compute_agent1_rfq_pricing,
     compute_agent2_po_margin,
     compute_agent3_rdd_delay,
+    compute_agent4_price_validity,
     compute_agent5_vendor_score,
     compute_agent6_gr_split,
     compute_agent7_triangle_pod,
@@ -20,6 +21,7 @@ from app.schemas.agent_payloads import (
     Agent1Request,
     POValidationRequest,
     Agent3RDDRequest,
+    Agent4Request,
     Agent5VendorScoreRequest,
     Agent6Request,
     Agent7TriangleRequest,
@@ -109,6 +111,28 @@ async def trigger_agent_3(req: Agent3RDDRequest):
             VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;
             """,
             "agent_3", req.entity_code, "PS06", req.reference_doc, json.dumps(calc), draft_text
+        )
+    return {"status": "QUEUED_IN_STAGING", "draft_action_id": str(draft_id), "metrics": calc, "draft_preview": draft_text}
+
+# Agent 4: Master Price Validity Radar & Bulk Template Generator
+@router.post("/agent-4/evaluate-price-book")
+async def trigger_agent_4(req: Agent4Request):
+    pool = check_db_pool()
+    calc = compute_agent4_price_validity(req.days_left, req.items_count, req.inflation_adj_pct)
+    draft_text = await generate_grounded_draft(
+        agent_id="agent_4",
+        entity_code=req.entity_code,
+        deterministic_data=calc,
+        raw_context=f"Price Book: {req.reference_doc} ({req.items_count} SKU, {req.days_left} days left, +{req.inflation_adj_pct}% inflation)"
+    )
+    async with pool.acquire() as conn:
+        draft_id = await conn.fetchval(
+            """
+            INSERT INTO draft_agent_actions 
+            (agent_id, entity_code, module_code, reference_doc, deterministic_payload, llm_draft_narrative)
+            VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;
+            """,
+            "agent_4", req.entity_code, "PS03", req.reference_doc, json.dumps(calc), draft_text
         )
     return {"status": "QUEUED_IN_STAGING", "draft_action_id": str(draft_id), "metrics": calc, "draft_preview": draft_text}
 

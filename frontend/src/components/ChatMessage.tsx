@@ -1,7 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { ChatMessage as ChatMessageType } from '@/context/ChatContext';
+import { useAuth } from '@/context/AuthContext';
+import { submitHITLDecision } from '@/lib/api';
 import Link from 'next/link';
 
 interface ChatMessageProps {
@@ -14,6 +16,7 @@ const AGENT_LABELS: Record<string, { name: string; color: string; icon: string }
   agent_1: { name: 'Quotation Assistant', color: 'from-blue-500 to-blue-700', icon: '💰' },
   agent_2: { name: 'Margin Pre-Checker', color: 'from-amber-500 to-amber-700', icon: '📊' },
   agent_3: { name: 'Backlog Narrator', color: 'from-orange-500 to-red-600', icon: '🚚' },
+  agent_4: { name: 'Price Validity Radar', color: 'from-cyan-500 to-cyan-700', icon: '📅' },
   agent_5: { name: 'Vendor Advisor', color: 'from-indigo-500 to-indigo-700', icon: '🏭' },
   agent_6: { name: 'GR Handler', color: 'from-rose-500 to-rose-700', icon: '📦' },
   agent_7: { name: 'Triangle & Stock', color: 'from-purple-500 to-purple-700', icon: '🔺' },
@@ -22,6 +25,26 @@ const AGENT_LABELS: Record<string, { name: string; color: string; icon: string }
 };
 
 export default function ChatMessage({ message, onSuggestionClick, onApprove }: ChatMessageProps) {
+  const { user } = useAuth();
+  const [decisionState, setDecisionState] = useState<'IDLE' | 'PROCESSING' | 'APPROVED' | 'DISCARDED'>('IDLE');
+
+  const handleInlineDecision = async (decision: 'APPROVE' | 'DISCARD') => {
+    if (!message.draft_action_id || decisionState === 'PROCESSING') return;
+    setDecisionState('PROCESSING');
+    try {
+      await submitHITLDecision({
+        draft_action_id: message.draft_action_id,
+        operator_id: user?.username || 'sg_purchaser',
+        decision,
+      });
+      setDecisionState(decision === 'APPROVE' ? 'APPROVED' : 'DISCARDED');
+      if (onApprove) onApprove(message.draft_action_id);
+    } catch (err: any) {
+      setDecisionState('IDLE');
+      alert(`Gagal memproses otorisasi: ${err.message || 'Kesalahan jaringan'}`);
+    }
+  };
+
   if (message.isLoading) {
     return (
       <div className="flex items-start gap-3 px-4 py-3">
@@ -96,21 +119,66 @@ export default function ChatMessage({ message, onSuggestionClick, onApprove }: C
               </div>
             )}
 
-            {/* HITL Approval Buttons */}
+            {/* HITL Approval Section (Inline Decision + Detail Link) */}
             {message.requires_hitl && message.draft_action_id && (
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-700/50">
-                <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  Menunggu Otorisasi HITL
-                </span>
-                <div className="ml-auto flex gap-2">
-                  <Link
-                    href="/hitl"
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[11px] font-bold shadow transition"
-                  >
-                    Buka HITL Gateway →
-                  </Link>
-                </div>
+              <div className="pt-2.5 border-t border-slate-700/50 flex flex-wrap items-center justify-between gap-2">
+                {decisionState === 'IDLE' && (
+                  <>
+                    <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                      Memerlukan Otorisasi HITL
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => handleInlineDecision('APPROVE')}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-lg text-[11px] font-bold shadow transition flex items-center gap-1 cursor-pointer"
+                      >
+                        ✓ Setujui
+                      </button>
+                      <button
+                        onClick={() => handleInlineDecision('DISCARD')}
+                        className="px-2.5 py-1.5 bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 border border-rose-500/40 rounded-lg text-[11px] font-bold transition cursor-pointer"
+                      >
+                        ✕ Tolak
+                      </button>
+                      <Link
+                        href="/hitl"
+                        className="px-2.5 py-1.5 bg-slate-700/70 hover:bg-slate-600 text-slate-300 rounded-lg text-[11px] font-semibold transition"
+                      >
+                        Detail →
+                      </Link>
+                    </div>
+                  </>
+                )}
+
+                {decisionState === 'PROCESSING' && (
+                  <span className="text-[11px] text-blue-400 font-bold flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
+                    Memproses otorisasi ke database & audit trail...
+                  </span>
+                )}
+
+                {decisionState === 'APPROVED' && (
+                  <div className="w-full flex items-center justify-between bg-emerald-950/50 border border-emerald-500/40 rounded-lg px-3 py-2 text-emerald-300 text-xs">
+                    <span className="font-bold flex items-center gap-1.5">
+                      ✅ Berhasil Disetujui ({user?.full_name || 'Operator'})
+                    </span>
+                    <Link href="/audit" className="text-[10px] font-bold text-emerald-400 hover:underline">
+                      Lihat Audit Trail →
+                    </Link>
+                  </div>
+                )}
+
+                {decisionState === 'DISCARDED' && (
+                  <div className="w-full flex items-center justify-between bg-rose-950/50 border border-rose-500/40 rounded-lg px-3 py-2 text-rose-300 text-xs">
+                    <span className="font-bold flex items-center gap-1.5">
+                      ❌ Draf Tindakan Ditolak / Dibatalkan
+                    </span>
+                    <Link href="/audit" className="text-[10px] font-bold text-rose-400 hover:underline">
+                      Catatan Audit →
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -164,6 +232,46 @@ export default function ChatMessage({ message, onSuggestionClick, onApprove }: C
                   </span>
                   <span className="font-mono font-bold text-blue-400">{item.ref_doc}</span>
                   <span className="text-slate-500">{item.operator}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Rich Card: Price Book List (Agent 4) */}
+        {richCard?.type === 'price_book_list' && richCard.items && (
+          <div className="bg-slate-800/60 backdrop-blur border border-slate-700/50 rounded-xl p-4 shadow-lg space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span>📅</span> Master Price Validity Radar ({richCard.entity})
+              </span>
+              <Link href="/agents/agent-4" className="text-[11px] font-bold text-blue-400 hover:text-blue-300 transition">
+                Buka Modul PS03 →
+              </Link>
+            </div>
+            <div className="space-y-1.5 max-h-56 overflow-y-auto">
+              {richCard.items.map((b: any) => (
+                <div key={b.id} className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2.5 border border-slate-700/40 text-xs">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-cyan-400">{b.id}</span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        b.days_left <= 30 ? 'bg-rose-900/50 text-rose-300 border border-rose-700/40' :
+                        b.days_left <= 60 ? 'bg-amber-900/50 text-amber-300 border border-amber-700/40' :
+                        'bg-emerald-900/50 text-emerald-300 border border-emerald-700/40'
+                      }`}>
+                        {b.days_left} hari tersisa
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-300 font-medium truncate mt-0.5">{b.vendor} • {b.category}</div>
+                    <div className="text-[10px] text-slate-400">{b.validity} ({b.items_count} SKU)</div>
+                  </div>
+                  <button
+                    onClick={() => onSuggestionClick?.(`Buat paket renewal ${b.id}`)}
+                    className="shrink-0 px-2.5 py-1 bg-cyan-600/30 hover:bg-cyan-600/60 text-cyan-300 border border-cyan-500/40 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                  >
+                    Paket Renewal →
+                  </button>
                 </div>
               ))}
             </div>

@@ -26,6 +26,12 @@ class Agent3RDDRequest(AgentTriggerBase):
     eta_str: str = Field(..., examples=["2026-09-20"], description="Estimated Time of Arrival (YYYY-MM-DD)")
     order_value: float = Field(..., examples=[45000.0])
 
+# Agent 4: Price Validity & Renewal Radar
+class Agent4Request(AgentTriggerBase):
+    days_left: int = Field(..., examples=[28])
+    items_count: int = Field(..., examples=[45])
+    inflation_adj_pct: float = Field(2.1, examples=[2.1])
+
 # Agent 5: Vendor Performance
 class Agent5VendorScoreRequest(AgentTriggerBase):
     on_time_rate: float = Field(..., examples=[92.5], description="Percentage of on-time deliveries (0-100)")
@@ -96,3 +102,4 @@ class ChatResponse(BaseModel):
     requires_hitl: bool = False
     draft_action_id: Optional[str] = None
     suggested_actions: list[str] = []
+    switch_entity: Optional[str] = None

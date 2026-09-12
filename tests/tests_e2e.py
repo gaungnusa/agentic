@@ -61,6 +61,20 @@ async def test_full_agent_workflow():
         data_a3 = res_a3.json()
         print(f"Agent 3 Draft ID: {data_a3['draft_action_id']} | Severity: {data_a3['metrics']['severity']}")
 
+        # 4. Agent 4: Price Validity & Renewal Radar
+        print("\n--- 4. Pengujian Agent 4 (Price Validity Radar & Bulk Template) ---")
+        a4_payload = {
+            "entity_code": "SG",
+            "reference_doc": "MP-CS-2026-Q2",
+            "days_left": 28,
+            "items_count": 45,
+            "inflation_adj_pct": 2.1
+        }
+        res_a4 = await client.post(f"{BASE_URL}/agents/agent-4/evaluate-price-book", json=a4_payload)
+        assert res_a4.status_code == 200, f"Agent 4 failed: {res_a4.text}"
+        data_a4 = res_a4.json()
+        print(f"Agent 4 Draft ID: {data_a4['draft_action_id']} | Status: {data_a4['metrics']['status']} | Urgency: {data_a4['metrics']['renewal_urgency']}")
+
         # 5. Agent 5: Vendor Performance Advisor
         print("\n--- 5. Pengujian Agent 5 (Vendor Scorecard & Quota Allocation) ---")
         a5_payload = {

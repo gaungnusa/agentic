@@ -10,6 +10,7 @@ from app.engine.deterministic import (
     compute_agent1_rfq_pricing,
     compute_agent2_po_margin,
     compute_agent3_rdd_delay,
+    compute_agent4_price_validity,
     compute_agent5_vendor_score,
     compute_agent6_gr_split,
     compute_agent7_triangle_pod,
@@ -67,6 +68,26 @@ class TestDeterministicEngine(unittest.TestCase):
         self.assertTrue(res_crit["is_delayed"])
         self.assertEqual(res_crit["severity"], "CRITICAL")
         self.assertTrue(res_crit["needs_escalation"])
+
+    def test_agent4_price_validity(self):
+        # Expiring soon (<= 30 days)
+        res_exp = compute_agent4_price_validity(days_left=28, items_count=45, inflation_adj_pct=2.1)
+        self.assertEqual(res_exp["status"], "EXPIRING_SOON")
+        self.assertEqual(res_exp["renewal_urgency"], "HIGH")
+        self.assertTrue(res_exp["requires_renewal_action"])
+        self.assertEqual(res_exp["bulk_template_format"], "xlsx")
+
+        # Scheduled (31 - 60 days)
+        res_sched = compute_agent4_price_validity(days_left=45, items_count=120)
+        self.assertEqual(res_sched["status"], "SCHEDULED")
+        self.assertEqual(res_sched["renewal_urgency"], "MEDIUM")
+        self.assertTrue(res_sched["requires_renewal_action"])
+
+        # Healthy (> 60 days)
+        res_ok = compute_agent4_price_validity(days_left=75, items_count=50)
+        self.assertEqual(res_ok["status"], "HEALTHY")
+        self.assertEqual(res_ok["renewal_urgency"], "LOW")
+        self.assertFalse(res_ok["requires_renewal_action"])
 
     def test_agent5_vendor_score(self):
         # Tier 1 Preferred (composite >= 88)

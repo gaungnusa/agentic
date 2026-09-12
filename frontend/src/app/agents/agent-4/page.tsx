@@ -5,11 +5,13 @@ import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
 import DrawerModal from '@/components/DrawerModal';
 import { useEntity } from '@/context/EntityContext';
+import { submitHITLDecision } from '@/lib/api';
 
 export default function Agent4Page() {
   const { entity } = useEntity();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   const PRICE_BOOKS = [
     {
@@ -44,7 +46,34 @@ export default function Agent4Page() {
     },
   ];
 
-  const handleGenerateRenewal = (book: any) => {
+  const handleGenerateRenewal = async (book: any) => {
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/agents/agent-4/evaluate-price-book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entity_code: entity,
+          reference_doc: book.id,
+          days_left: book.days_left,
+          items_count: book.items_count,
+          inflation_adj_pct: 2.1,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedBook({
+          payload: data.metrics,
+          draftText: data.draft_preview,
+          ref_doc: book.id,
+          draft_id: data.draft_action_id,
+        });
+        setIsDrawerOpen(true);
+        return;
+      }
+    } catch {}
+
+    // Fallback if backend is unreachable
     const payload = {
       book_reference: book.id,
       vendor: book.vendor,
@@ -66,6 +95,7 @@ export default function Agent4Page() {
 
     setSelectedBook({ payload, draftText, ref_doc: book.id });
     setIsDrawerOpen(true);
+    setLoading(false);
   };
 
   return (
@@ -141,8 +171,21 @@ export default function Agent4Page() {
         subTitle={`Modul PS03 • Entitas ${entity}`}
         payload={selectedBook?.payload || {}}
         narrative={selectedBook?.draftText || ''}
-        onApprove={() => {
-          alert('Template Excel (.xlsx) dibuat dan draf email renegosiasi terkirim!');
+        onApprove={async () => {
+          if (selectedBook?.draft_id) {
+            try {
+              await submitHITLDecision({
+                draft_action_id: selectedBook.draft_id,
+                operator_id: 'sg_purchaser',
+                decision: 'APPROVE',
+              });
+              alert(`✓ Paket renewal ${selectedBook.ref_doc} berhasil disetujui dan dicatat ke Audit Trail!`);
+            } catch (err: any) {
+              alert(`Gagal approve: ${err.message || 'Kesalahan jaringan'}`);
+            }
+          } else {
+            alert('Template Excel (.xlsx) dibuat dan draf email renegosiasi terkirim!');
+          }
           setIsDrawerOpen(false);
         }}
         onEdit={() => setIsDrawerOpen(false)}

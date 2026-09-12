@@ -88,6 +88,26 @@ def compute_agent1_rfq_pricing(unit_cost: Optional[float], target_margin_pct: fl
         "action_required": "DISPATCH_PARALLEL_SOURCING_RFQ"
     }
 
+def compute_agent4_price_validity(days_left: int, items_count: int, inflation_adj_pct: float = 2.1) -> dict:
+    """Agent 4: Master Price Validity Radar & Bulk Template Generator (Module PS03)"""
+    status = "HEALTHY"
+    if days_left <= 30:
+        status = "EXPIRING_SOON"
+    elif days_left <= 60:
+        status = "SCHEDULED"
+
+    renewal_urgency = "HIGH" if days_left <= 30 else ("MEDIUM" if days_left <= 60 else "LOW")
+    return {
+        "days_left": days_left,
+        "items_count": items_count,
+        "status": status,
+        "renewal_urgency": renewal_urgency,
+        "recommended_inflation_adjustment_pct": inflation_adj_pct,
+        "bulk_template_format": "xlsx",
+        "requires_renewal_action": days_left <= 60
+    }
+
+
 def compute_agent2_po_margin(so_price: float, po_cost: float, ordered_qty: int, moq: int, tier2_cost: Optional[float] = None) -> dict:
     """Agent 2: Hitung margin kotor deterministik dan cek batas MOQ"""
     gross_margin = ((so_price - po_cost) / so_price) * 100

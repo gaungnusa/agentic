@@ -23,6 +23,7 @@ from app.engine.deterministic import (
     compute_agent1_rfq_pricing,
     compute_agent2_po_margin,
     compute_agent3_rdd_delay,
+    compute_agent4_price_validity,
     compute_agent5_vendor_score,
     compute_agent6_gr_split,
     compute_agent7_triangle_pod,
@@ -50,6 +51,7 @@ Intent yang tersedia:
 - "agent_1": RFQ pricing / quotation / penawaran harga / cari part di katalog
 - "agent_2": Validasi margin PO/SO / cek mismatch harga / MOQ check
 - "agent_3": Cek backlog / delay pengiriman / RDD vs ETA / keterlambatan
+- "agent_4": Price validity radar / renewal katalog / kontrak harga kedaluwarsa / master price book
 - "agent_5": Evaluasi vendor / skor performa supplier / vendor scoring
 - "agent_6": Goods receipt / penerimaan gudang / barang rusak / RMA
 - "agent_7_triangle": Triangle trade / POD forwarder / logical GR/GI
@@ -58,11 +60,15 @@ Intent yang tersedia:
 - "agent_9": Cash flow / runway kas / likuiditas / cash runway
 - "hitl_queue": Lihat antrean HITL / pending approval / draf menunggu
 - "audit_trail": Lihat audit trail / riwayat keputusan / log audit
+- "switch_entity": Beralih atau ganti entitas bisnis aktif (SG, VN, KR, IN, JP)
 - "general": Pertanyaan umum / sapaan / bantuan / tidak jelas
 
 Parameter yang harus diekstrak (jika ada dalam pesan):
-- reference_doc: nomor dokumen (PO-xxx, SO-xxx, RFQ-xxx, TXN-xxx, LOAN-xxx)
+- reference_doc: nomor dokumen (PO-xxx, SO-xxx, RFQ-xxx, TXN-xxx, LOAN-xxx, MP-xxx)
 - entity_code: kode entitas (SG, VN, KR, IN, JP)
+- target_entity: kode entitas tujuan jika berniat ganti entitas (SG, VN, KR, IN, JP)
+- angka/nilai yang disebutkan
+
 - angka/nilai yang disebutkan
 
 Contoh output:
@@ -170,6 +176,45 @@ IN_MEMORY_BANK_TXNS = [
     {"txn_ref": "TXN-2026-SG-992", "remittance_amount": 25000.00, "book_rate": 1.36, "settle_rate": 1.38, "settled_amount": 34500.00, "settled_currency": "SGD", "booked_amount": 25000.00, "booked_currency": "USD", "entity_code": "SG", "target_invoices": [{"inv": "INV-2026-002", "amount": 25000}]}
 ]
 
+IN_MEMORY_PRICE_BOOKS = [
+    {
+        "book_reference": "MP-CS-2026-Q2",
+        "vendor": "Cisco Systems APAC",
+        "category": "Optics & SFP Modules",
+        "validity": "01 Jul - 30 Sep 2026",
+        "days_left": 28,
+        "items_count": 45,
+        "entity_code": "SG"
+    },
+    {
+        "book_reference": "MP-FH-2026-Q3",
+        "vendor": "FiberHome Optical",
+        "category": "Cables & Patch Cords",
+        "validity": "15 Jul - 15 Oct 2026",
+        "days_left": 43,
+        "items_count": 120,
+        "entity_code": "SG"
+    },
+    {
+        "book_reference": "MP-SUM-2026-Q3",
+        "vendor": "Sumitomo Electric JP",
+        "category": "Fusion Splicers & Toolkits",
+        "validity": "01 Aug - 31 Oct 2026",
+        "days_left": 59,
+        "items_count": 18,
+        "entity_code": "SG"
+    },
+    {
+        "book_reference": "MP-VN-2026-Q3",
+        "vendor": "Viettel Post Optical Tech",
+        "category": "FTTH Passive Accessories",
+        "validity": "01 Aug - 20 Oct 2026",
+        "days_left": 22,
+        "items_count": 64,
+        "entity_code": "VN"
+    }
+]
+
 # ============================================================================
 # HELPER: DATA LOOKUP (DB OR IN-MEMORY FALLBACK)
 # ============================================================================
@@ -196,6 +241,14 @@ async def lookup_db_data(pool, intent: str, params: dict, entity_code: str) -> D
             if so:
                 return {"found": True, "source": "in_memory_so", "data": so}
                 
+        elif intent == "agent_4":
+            if ref:
+                book = next((b for b in IN_MEMORY_PRICE_BOOKS if b["book_reference"].upper() == ref.upper()), None)
+                if book:
+                    return {"found": True, "source": "in_memory_price_book", "data": book}
+            books = [b for b in IN_MEMORY_PRICE_BOOKS if b["entity_code"] == entity_code or entity_code == "ALL"]
+            return {"found": True, "source": "in_memory_price_books", "data": books or IN_MEMORY_PRICE_BOOKS}
+                
         elif intent == "agent_5":
             v_match = next((v for v in IN_MEMORY_VENDORS if v["entity_code"] == entity_code), None)
             if not v_match:
@@ -217,7 +270,7 @@ async def lookup_db_data(pool, intent: str, params: dict, entity_code: str) -> D
                 txn = IN_MEMORY_BANK_TXNS[0]
             if txn:
                 return {"found": True, "source": "in_memory_bank", "data": txn}
-                
+            
         elif intent == "agent_9":
             cash = IN_MEMORY_CASH_FLOW.get(entity_code, IN_MEMORY_CASH_FLOW.get("SG"))
             return {"found": True, "source": "in_memory_cash", "data": cash}
@@ -318,6 +371,14 @@ async def lookup_db_data(pool, intent: str, params: dict, entity_code: str) -> D
             )
             if row:
                 return {"found": True, "source": "mock_entity_cash", "data": dict(row)}
+
+        elif intent == "agent_4":
+            if ref:
+                book = next((b for b in IN_MEMORY_PRICE_BOOKS if b["book_reference"].upper() == ref.upper()), None)
+                if book:
+                    return {"found": True, "source": "price_book", "data": book}
+            books = [b for b in IN_MEMORY_PRICE_BOOKS if b["entity_code"] == entity_code or entity_code == "ALL"]
+            return {"found": True, "source": "price_books", "data": books or IN_MEMORY_PRICE_BOOKS}
                 
         elif intent == "agent_1":
             query = params.get("part_description", params.get("reference_doc", ""))
@@ -411,9 +472,30 @@ def keyword_intent_fallback(message: str) -> Dict[str, Any]:
     """Robust keyword-based intent classifier as fallback when LLM is unavailable."""
     msg = message.lower().strip()
     
-    # Extract reference documents
+    # 0. Entity switching detection (Priority check)
     import re
-    ref_match = re.search(r'(PO|SO|RFQ|TXN|LOAN)[-\s]?\d{4}[-\s]?\d{2,5}', message, re.IGNORECASE)
+    entity_switch_match = re.search(
+        r'(?:ganti|pindah|switch|ubah|set)\s+(?:ke\s+|entitas\s+|entity\s+)*(sg|vn|kr|in|jp|singapore|singapura|vietnam|korea|india|japan|jepang)\b',
+        msg
+    )
+    if not entity_switch_match:
+        entity_switch_match = re.search(r'\b(?:ke|to)\s+(?:entitas|entity)\s+(sg|vn|kr|in|jp)\b', msg)
+    if entity_switch_match:
+        raw_ent = entity_switch_match.group(1).lower()
+        ent_map = {
+            "sg": "SG", "singapore": "SG", "singapura": "SG",
+            "vn": "VN", "vietnam": "VN",
+            "kr": "KR", "korea": "KR",
+            "in": "IN", "india": "IN",
+            "jp": "JP", "japan": "JP", "jepang": "JP"
+        }
+        target_entity = ent_map.get(raw_ent, "SG")
+        return {"intent": "switch_entity", "params": {"target_entity": target_entity}, "confidence": 0.95}
+
+    # Extract reference documents
+    ref_match = re.search(r'\b(PO|SO|RFQ|TXN|LOAN|MP)-[A-Za-z0-9-]+\b', message, re.IGNORECASE)
+    if not ref_match:
+        ref_match = re.search(r'(PO|SO|RFQ|TXN|LOAN)[-\s]?\d{4}[-\s]?\d{2,5}', message, re.IGNORECASE)
     ref_doc = ref_match.group(0).replace(" ", "-").upper() if ref_match else ""
     
     params: Dict[str, Any] = {}
@@ -454,14 +536,15 @@ def keyword_intent_fallback(message: str) -> Dict[str, Any]:
     if any(kw in msg for kw in ["cash", "kas", "runway", "likuiditas", "cash flow"]):
         return {"intent": "agent_9", "params": params, "confidence": 0.85}
     
+    if any(kw in msg for kw in ["renewal", "jatuh tempo", "expired", "kedaluwarsa", "master price", "validitas harga", "katalog expired", "price book", "kontrak harga", "radar harga", "ps03"]) or (ref_doc and ref_doc.startswith("MP-")):
+        return {"intent": "agent_4", "params": params, "confidence": 0.85}
+
     if any(kw in msg for kw in ["rfq", "quotation", "penawaran", "harga", "katalog", "part", "sfp", "transceiver"]):
         params["part_description"] = msg
         return {"intent": "agent_1", "params": params, "confidence": 0.8}
     
-    if any(kw in msg for kw in ["renewal", "jatuh tempo", "expired", "kedaluwarsa", "master price"]):
-        return {"intent": "agent_4", "params": params, "confidence": 0.8}
-    
     return {"intent": "general", "params": params, "confidence": 0.5}
+
 
 
 # ============================================================================
@@ -707,6 +790,91 @@ async def execute_agent_logic(
             result["reply"] = f"⚠️ Data kas operasional untuk entitas {entity_code} belum tersedia."
         result["suggested_actions"] = ["Cek rekonsiliasi bank", "Lihat audit trail"]
         return result
+
+    # --- Natural Language Entity Switching ---
+    if intent == "switch_entity":
+        target = params.get("target_entity", "SG").upper()
+        entity_names = {
+            "SG": "Singapore HQ",
+            "VN": "Vietnam SSC",
+            "KR": "Korea Branch",
+            "IN": "India Back-Office",
+            "JP": "Japan Office"
+        }
+        flags = {"SG": "🇸🇬", "VN": "🇻🇳", "KR": "🇰🇷", "IN": "🇮🇳", "JP": "🇯🇵"}
+        target_name = entity_names.get(target, target)
+        flag = flags.get(target, "🌐")
+        result["switch_entity"] = target
+        result["reply"] = (
+            f"{flag} **Entitas Berhasil Dialihkan ke {target} ({target_name})**\n\n"
+            f"Konteks sistem telah diperbarui secara otomatis. Semua kalkulasi kas operasional, "
+            f"katalog harga, vendor scoring, dan antrean HITL sekarang disinkronkan dengan **{target_name}**."
+        )
+        result["suggested_actions"] = [
+            f"Cek runway kas operasional {target}",
+            f"Evaluasi semua vendor entitas {target}",
+            f"Lihat antrean HITL {target}",
+            "Cek radar validitas harga"
+        ]
+        return result
+
+    # --- Agent 4: Master Price Validity & Renewal Radar (Module PS03) ---
+    if intent == "agent_4":
+        result["agent_used"] = "agent_4"
+        if db_data.get("found"):
+            data = db_data["data"]
+            if isinstance(data, list):
+                # Multiple books — show radar summary
+                items = []
+                for b in data:
+                    calc = compute_agent4_price_validity(int(b["days_left"]), int(b["items_count"]))
+                    items.append({
+                        "id": b["book_reference"],
+                        "vendor": b["vendor"],
+                        "category": b["category"],
+                        "validity": b["validity"],
+                        "days_left": b["days_left"],
+                        "status": calc["status"],
+                        "urgency": calc["renewal_urgency"],
+                        "items_count": b["items_count"]
+                    })
+                result["reply"] = f"📅 **Master Price Validity Radar (Module PS03)** — Terpantau **{len(items)} buku katalog harga** untuk entitas {entity_code}:"
+                result["rich_card"] = {"type": "price_book_list", "items": items, "entity": entity_code}
+                result["suggested_actions"] = [
+                    f"Buat paket renewal {items[0]['id']}" if items else "Cek cash flow",
+                    "Lihat antrean HITL",
+                    "Cari part di katalog"
+                ]
+            else:
+                # Single book renewal package
+                book = data
+                calc = compute_agent4_price_validity(int(book["days_left"]), int(book["items_count"]))
+                ref_doc = book["book_reference"]
+                narrative = (
+                    f"Agent 4 mendeteksi katalog harga {book['vendor']} ({ref_doc}) akan kedaluwarsa dalam {calc['days_left']} hari.\n\n"
+                    f"Paket Pembaruan Otomatis Terbentuk:\n"
+                    f"• Penyesuaian indeks inflasi: +{calc['recommended_inflation_adjustment_pct']}% pre-calculated\n"
+                    f"• Format file: Template resmi bulk Excel ERP (.xlsx) untuk {calc['items_count']} baris SKU\n"
+                    f"• Target periode baru: Q4 2026 renewal dispatch\n\n"
+                    f"Draf paket renewal telah disiapkan untuk otorisasi Human-in-the-Loop."
+                )
+                draft_id = await _persist_draft(pool, "agent_4", entity_code, "PS03", ref_doc, calc, narrative)
+                result["reply"] = narrative
+                result["rich_card"] = {
+                    "type": "agent_result",
+                    "agent": "agent_4",
+                    "agent_name": "Price Validity & Renewal Radar",
+                    "metrics": calc,
+                    "book_reference": ref_doc,
+                    "vendor": book["vendor"]
+                }
+                result["requires_hitl"] = calc["requires_renewal_action"]
+                result["draft_action_id"] = draft_id
+                result["suggested_actions"] = ["Lihat antrean HITL", "Cek radar harga lain"]
+        else:
+            result["reply"] = f"⚠️ Tidak ada data price book ditemukan untuk entitas {entity_code}."
+            result["suggested_actions"] = ["Cek radar harga MP-CS-2026-Q2", "Cek cash flow"]
+        return result
     
     # --- General / Fallback ---
     result["reply"] = (
@@ -715,21 +883,23 @@ async def execute_agent_logic(
         f"• **Quotation & Pricing** — \"Carikan harga SFP-10G-LR\"\n"
         f"• **Validasi Margin PO** — \"Cek margin PO-2026-4412\"\n"
         f"• **Backlog Pengiriman** — \"Cek backlog SO-2026-4401\"\n"
+        f"• **Price Validity & Renewal** — \"Cek radar validitas harga\"\n"
         f"• **Evaluasi Vendor** — \"Tampilkan skor vendor entitas {entity_code}\"\n"
         f"• **Penerimaan Gudang** — \"Cek GR PO-2026-9902\"\n"
         f"• **Triangle Trade** — \"Verifikasi POD triangle trade\"\n"
         f"• **Pinjaman Stok** — \"Cek pinjaman stok aktif\"\n"
         f"• **Rekonsiliasi Bank** — \"Rekonsiliasi TXN-DBS-88319\"\n"
         f"• **Cash Flow** — \"Cek runway kas {entity_code}\"\n"
-        f"• **HITL Queue** — \"Tampilkan antrean approval\"\n"
-        f"• **Audit Trail** — \"Lihat riwayat audit\"\n\n"
+        f"• **Ganti Entitas** — \"Pindah ke entitas VN\"\n"
+        f"• **HITL Queue & Audit** — \"Tampilkan antrean approval\"\n\n"
         f"Ketik pertanyaan Anda dalam bahasa Indonesia atau Inggris. Entitas aktif: **{entity_code}**."
     )
     result["suggested_actions"] = [
-        "Cek cash flow", "Lihat antrean HITL", "Evaluasi semua vendor",
-        f"Cek backlog SO-2026-4401", "Cari part SFP-10G"
+        "Cek cash flow", "Cek radar validitas harga", "Lihat antrean HITL", "Evaluasi semua vendor",
+        f"Cek backlog SO-2026-4401", "Ganti entitas ke VN"
     ]
     return result
+
 
 
 async def _persist_draft(pool, agent_id, entity_code, module_code, ref_doc, calc, narrative) -> Optional[str]:
@@ -871,8 +1041,10 @@ async def chat_message(req: ChatRequest, current_user: Dict[str, Any] = Depends(
         rich_card=agent_result.get("rich_card"),
         requires_hitl=agent_result.get("requires_hitl", False),
         draft_action_id=agent_result.get("draft_action_id"),
-        suggested_actions=agent_result.get("suggested_actions", [])
+        suggested_actions=agent_result.get("suggested_actions", []),
+        switch_entity=agent_result.get("switch_entity")
     )
+
 
 
 @router.get("/history/{conversation_id}")

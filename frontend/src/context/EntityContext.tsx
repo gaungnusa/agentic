@@ -24,6 +24,18 @@ const EntityContext = createContext<EntityContextType | undefined>(undefined);
 export function EntityProvider({ children }: { children: React.ReactNode }) {
   const [entity, setEntity] = useState<EntityCode>('SG');
 
+  useEffect(() => {
+    const handleSwitch = (e: CustomEvent<EntityCode>) => {
+      if (e.detail && ['SG', 'VN', 'KR', 'IN', 'JP'].includes(e.detail)) {
+        setEntity(e.detail);
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('batu:switch-entity' as any, handleSwitch);
+      return () => window.removeEventListener('batu:switch-entity' as any, handleSwitch);
+    }
+  }, []);
+
   return (
     <EntityContext.Provider 
       value={{ 

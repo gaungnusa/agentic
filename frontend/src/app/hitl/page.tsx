@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import UserPersonaDropdown from '@/components/UserPersonaDropdown';
+import { getBaseUrl } from '@/lib/api';
 
 interface DraftAction {
   id: string;
@@ -64,7 +65,8 @@ export default function HITLPage() {
   const fetchQueue = useCallback(async () => {
     try {
       setFetchError(null);
-      const res = await fetch(`http://localhost:8000/api/v1/hitl/queue/${entity}`, {
+      const baseUrl = await getBaseUrl();
+      const res = await fetch(`${baseUrl}/hitl/queue/${entity}`, {
         cache: 'no-store'
       });
       if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
@@ -91,7 +93,8 @@ export default function HITLPage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await fetch('http://localhost:8000/api/v1/hitl/decision', {
+      const baseUrl = await getBaseUrl();
+      const res = await fetch(`${baseUrl}/hitl/decision`, {
         method: 'POST',
         headers,
         body: JSON.stringify({

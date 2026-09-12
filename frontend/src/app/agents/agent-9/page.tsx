@@ -6,6 +6,7 @@ import StatCard from '@/components/StatCard';
 import DrawerModal from '@/components/DrawerModal';
 import ReplicaSelectorModal from '@/components/ReplicaSelectorModal';
 import { useEntity } from '@/context/EntityContext';
+import { getBaseUrl } from '@/lib/api';
 
 export default function Agent9Page() {
   const { entity } = useEntity();
@@ -25,7 +26,8 @@ export default function Agent9Page() {
   const handleAssessRunway = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/v1/agents/agent-9/assess-cash-runway', {
+      const baseUrl = await getBaseUrl();
+      const res = await fetch(`${baseUrl}/agents/agent-9/assess-cash-runway`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

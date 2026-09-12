@@ -1,27 +1,48 @@
-const CANDIDATE_URLS = [
-  process.env.NEXT_PUBLIC_API_URL,
-  'http://localhost:8000/api/v1',
-  'http://localhost:8001/api/v1',
-].filter(Boolean) as string[];
+export function getCandidateRoots(): string[] {
+  const roots: string[] = [];
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    roots.push(process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, ''));
+  }
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    roots.push(`http://${window.location.hostname}:8000`);
+    roots.push(`http://${window.location.hostname}:8001`);
+  }
+  roots.push('http://localhost:8000');
+  roots.push('http://localhost:8001');
+  return Array.from(new Set(roots.filter(Boolean)));
+}
 
+let resolvedRoot: string | null = null;
 let resolvedBaseUrl: string | null = null;
 
-async function getBaseUrl(): Promise<string> {
-  if (resolvedBaseUrl) return resolvedBaseUrl;
-  for (const url of CANDIDATE_URLS) {
-    const root = url.replace(/\/api\/v1\/?$/, '');
+export async function getApiRoot(): Promise<string> {
+  if (resolvedRoot) return resolvedRoot;
+  const candidates = getCandidateRoots();
+  for (const root of candidates) {
     try {
-      const res = await fetch(`${root}/health`, { signal: AbortSignal.timeout(800) });
+      const res = await fetch(`${root}/health`, { signal: AbortSignal.timeout(1000) });
       if (res.ok) {
         const data = await res.json();
         if (data.legal_entities) {
-          resolvedBaseUrl = url;
-          return url;
+          resolvedRoot = root;
+          resolvedBaseUrl = `${root}/api/v1`;
+          return root;
         }
       }
     } catch {}
   }
-  return 'http://localhost:8001/api/v1';
+  const fallback = typeof window !== 'undefined' && window.location?.hostname
+    ? `http://${window.location.hostname}:8000`
+    : 'http://localhost:8000';
+  resolvedRoot = fallback;
+  resolvedBaseUrl = `${fallback}/api/v1`;
+  return fallback;
+}
+
+export async function getBaseUrl(): Promise<string> {
+  if (resolvedBaseUrl) return resolvedBaseUrl;
+  await getApiRoot();
+  return resolvedBaseUrl || 'http://localhost:8000/api/v1';
 }
 
 export async function fetchHITLQueue(entityCode: string) {

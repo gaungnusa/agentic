@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
 import DrawerModal from '@/components/DrawerModal';
 import { useEntity } from '@/context/EntityContext';
+import { getBaseUrl } from '@/lib/api';
 
 export default function Agent8Page() {
   const { entity } = useEntity();
@@ -24,7 +25,8 @@ export default function Agent8Page() {
   const handleReconcile = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/v1/agents/agent-8/reconcile-bank', {
+      const baseUrl = await getBaseUrl();
+      const res = await fetch(`${baseUrl}/agents/agent-8/reconcile-bank`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

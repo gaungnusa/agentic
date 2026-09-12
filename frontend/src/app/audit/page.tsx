@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
 import { useEntity } from '@/context/EntityContext';
+import { getBaseUrl } from '@/lib/api';
 
 interface AuditLog {
   id: string;
@@ -31,7 +32,8 @@ export default function AuditTrailPage() {
   const fetchAuditLogs = useCallback(async () => {
     try {
       setFetchError(null);
-      const res = await fetch(`http://localhost:8000/api/v1/hitl/audit/${entity}`, {
+      const baseUrl = await getBaseUrl();
+      const res = await fetch(`${baseUrl}/hitl/audit/${entity}`, {
         cache: 'no-store'
       });
       if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);

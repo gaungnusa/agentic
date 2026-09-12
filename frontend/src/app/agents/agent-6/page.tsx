@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
 import DrawerModal from '@/components/DrawerModal';
 import { useEntity } from '@/context/EntityContext';
+import { getBaseUrl } from '@/lib/api';
 
 export default function Agent6Page() {
   const { entity } = useEntity();
@@ -13,7 +14,8 @@ export default function Agent6Page() {
 
   const handleScanSimulation = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/agents/agent-6/handle-gr', {
+      const baseUrl = await getBaseUrl();
+      const res = await fetch(`${baseUrl}/agents/agent-6/handle-gr`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getApiRoot } from '@/lib/api';
 
 interface Column {
   key: string;
@@ -37,12 +38,13 @@ export default function ReplicaSelectorModal({
     setLoading(true);
     setError(null);
     try {
-      let url = `http://localhost:8000${endpoint}`;
+      const apiRoot = await getApiRoot();
+      let url = `${apiRoot}${endpoint}`;
       if (isSemanticMode && semanticQuery && semanticQuery.trim().length > 1) {
         // Extract entity from endpoint, e.g. /api/v1/replica/master-price/SG -> SG
         const parts = endpoint.split('/');
         const entity = parts[parts.length - 1] || 'ALL';
-        url = `http://localhost:8000/api/v1/replica/catalog/semantic-search?q=${encodeURIComponent(
+        url = `${apiRoot}/api/v1/replica/catalog/semantic-search?q=${encodeURIComponent(
           semanticQuery
         )}&entity_code=${entity}`;
       }

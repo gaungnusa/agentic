@@ -24,33 +24,12 @@ interface ChatContextType {
   loadConversation: (convId: string) => Promise<void>;
 }
 
+import { getApiRoot } from '@/lib/api';
+
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-const CANDIDATE_API_BASES = [
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, ''),
-  'http://localhost:8000',
-  'http://localhost:8001',
-].filter(Boolean) as string[];
-
-let activeApiBase: string | null = null;
-
 async function resolveApiBase(): Promise<string> {
-  if (activeApiBase) return activeApiBase;
-  for (const base of CANDIDATE_API_BASES) {
-    try {
-      const res = await fetch(`${base}/health`, { signal: AbortSignal.timeout(800) });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.legal_entities) {
-          activeApiBase = base;
-          return base;
-        }
-      }
-    } catch {
-      // Continue to next candidate
-    }
-  }
-  return 'http://localhost:8001';
+  return await getApiRoot();
 }
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {

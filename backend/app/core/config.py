@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     OLLAMA_MODEL: str = "qwen2.5:1.5b"
     APP_PORT: int = 8000
     ALLOWED_ENTITIES: List[str] = ["SG", "VN", "KR", "IN", "JP"]
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    CORS_ORIGINS: List[str] = ["*"]
 
     class Config:
         env_file = ".env"

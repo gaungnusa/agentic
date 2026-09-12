@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getBaseUrl } from '@/lib/api';
 
 export interface UserProfile {
   username: string;
@@ -102,7 +103,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       // Try login to get valid JWT from backend
-      const res = await fetch('http://localhost:8000/api/v1/auth/login', {
+      const baseUrl = await getBaseUrl();
+      const res = await fetch(`${baseUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -292,6 +292,14 @@ async def lookup_db_data(pool, intent: str, params: dict, entity_code: str) -> D
             audits = [a for a in IN_MEMORY_AUDIT if a.get("entity_code", entity_code) == entity_code or entity_code == "ALL"]
             return {"found": bool(audits), "source": "in_memory_audit", "data": audits or IN_MEMORY_AUDIT}
 
+        elif intent == "list_po":
+            pos = [p for p in IN_MEMORY_POS if p.get("entity_code") == entity_code or entity_code == "ALL"]
+            return {"found": True, "source": "in_memory_pos", "data": pos or IN_MEMORY_POS}
+
+        elif intent == "list_parts":
+            parts = [p for p in IN_MEMORY_MASTER_PRICE if p.get("entity_code") == entity_code or entity_code == "ALL"]
+            return {"found": True, "source": "in_memory_parts", "data": parts or IN_MEMORY_MASTER_PRICE}
+
         return {"found": False}
 
     # -------------------------------------------------------------
@@ -427,6 +435,20 @@ async def lookup_db_data(pool, intent: str, params: dict, entity_code: str) -> D
                 "time": r["created_at"].isoformat() if r["created_at"] else None
             } for r in rows]
             return {"found": bool(items), "source": "audit_trail_logs", "data": items}
+
+        elif intent == "list_po":
+            rows = await conn.fetch(
+                "SELECT * FROM mock_purchase_orders WHERE entity_code = $1 OR $1 = 'ALL' ORDER BY po_number ASC LIMIT 10",
+                entity_code
+            )
+            return {"found": bool(rows), "source": "mock_purchase_orders", "data": [dict(r) for r in rows]}
+
+        elif intent == "list_parts":
+            rows = await conn.fetch(
+                "SELECT * FROM mock_master_price WHERE entity_code = $1 OR $1 = 'ALL' ORDER BY part_number ASC LIMIT 10",
+                entity_code
+            )
+            return {"found": bool(rows), "source": "mock_master_price", "data": [dict(r) for r in rows]}
     
     return {"found": False}
 
@@ -511,6 +533,14 @@ def keyword_intent_fallback(message: str) -> Dict[str, Any]:
     
     if any(kw in msg for kw in ["audit", "riwayat", "log keputusan", "trail"]):
         return {"intent": "audit_trail", "params": params, "confidence": 0.9}
+
+    # Explicit list of POs (Purchase Orders)
+    if any(kw in msg for kw in ["daftar po", "list po", "tampilkan po", "semua po", "lihat po", "purchase order list", "daftar purchase order", "ada po apa", "cek po"]):
+        return {"intent": "list_po", "params": params, "confidence": 0.95}
+
+    # Explicit list of Parts / Master Price Catalog
+    if any(kw in msg for kw in ["daftar part", "list part", "daftar katalog", "katalog part", "daftar barang", "list barang", "semua part", "daftar sku", "daftar master price", "katalog suku cadang", "ada part apa"]):
+        return {"intent": "list_parts", "params": params, "confidence": 0.95}
     
     if any(kw in msg for kw in ["margin", "mismatch", "moq", "po vs so", "validasi po"]):
         return {"intent": "agent_2", "params": params, "confidence": 0.85}
@@ -585,6 +615,39 @@ async def execute_agent_logic(
             result["reply"] = f"📜 **{len(items)} event audit trail** terbaru untuk entitas {entity_code}:"
             result["rich_card"] = {"type": "audit_trail", "items": items, "entity": entity_code}
         result["suggested_actions"] = ["Lihat antrean HITL", "Cek cash flow"]
+        return result
+
+    # --- List Purchase Orders ---
+    if intent == "list_po":
+        items = db_data.get("data", [])
+        if not items:
+            result["reply"] = f"⚠️ Tidak ditemukan data Purchase Order untuk entitas **{entity_code}**."
+            result["suggested_actions"] = ["Daftar part", "Lihat antrean HITL"]
+        else:
+            result["reply"] = f"📋 **Daftar Purchase Order (PO)** — Terpantau **{len(items)} PO** pada entitas **{entity_code}**:"
+            result["rich_card"] = {"type": "po_list", "items": items, "entity": entity_code}
+            result["suggested_actions"] = [
+                f"Cek margin {items[0]['po_number']}",
+                f"Cek GR {items[0]['po_number']}",
+                "Daftar part",
+                "Lihat antrean HITL"
+            ]
+        return result
+
+    # --- List Parts / Master Price Catalog ---
+    if intent == "list_parts":
+        items = db_data.get("data", [])
+        if not items:
+            result["reply"] = f"⚠️ Tidak ada suku cadang terdaftar di Master Price untuk entitas **{entity_code}**."
+            result["suggested_actions"] = ["Cek radar validitas harga", "Daftar PO"]
+        else:
+            result["reply"] = f"📦 **Katalog Suku Cadang (Master Price PS03)** — Ditemukan **{len(items)} SKU** untuk entitas **{entity_code}**:"
+            result["rich_card"] = {"type": "part_list", "items": items, "entity": entity_code}
+            result["suggested_actions"] = [
+                f"Carikan harga {items[0]['part_number']}",
+                "Cek radar validitas harga",
+                "Daftar PO"
+            ]
         return result
     
     # --- Agent 1: RFQ Pricing ---

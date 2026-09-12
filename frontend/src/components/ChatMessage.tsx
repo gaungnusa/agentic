@@ -238,6 +238,94 @@ export default function ChatMessage({ message, onSuggestionClick, onApprove }: C
           </div>
         )}
 
+        {/* Rich Card: PO List */}
+        {richCard?.type === 'po_list' && richCard.items && (
+          <div className="bg-slate-800/60 backdrop-blur border border-slate-700/50 rounded-xl p-4 shadow-lg space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span>📋</span> Purchase Orders ({richCard.entity})
+              </span>
+              <Link href="/agents/agent-2" className="text-[11px] font-bold text-blue-400 hover:text-blue-300 transition">
+                Buka Modul PO →
+              </Link>
+            </div>
+            <div className="space-y-1.5 max-h-56 overflow-y-auto">
+              {richCard.items.map((po: any) => (
+                <div key={po.po_number} className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2.5 border border-slate-700/40 text-xs">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-blue-400">{po.po_number}</span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        po.status === 'DOCK_SCAN' ? 'bg-amber-900/50 text-amber-300 border border-amber-700/40' :
+                        po.status === 'CONFIRMED' ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/40' :
+                        'bg-slate-800 text-slate-300 border border-slate-700'
+                      }`}>
+                        {po.status || 'ISSUED'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-300 font-medium truncate mt-0.5">{po.supplier_name}</div>
+                    <div className="text-[10px] text-slate-400">
+                      Part: <span className="text-slate-200">{po.part_number}</span> • Qty: <span className="text-blue-300">{po.ordered_qty}</span> • Cost: <span className="text-emerald-400">${po.po_cost_price}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <button
+                      onClick={() => onSuggestionClick?.(`Cek margin ${po.po_number}`)}
+                      className="px-2 py-1 bg-blue-600/30 hover:bg-blue-600/60 text-blue-300 border border-blue-500/40 rounded text-[10px] font-bold transition cursor-pointer"
+                    >
+                      Cek Margin →
+                    </button>
+                    <button
+                      onClick={() => onSuggestionClick?.(`Cek GR ${po.po_number}`)}
+                      className="px-2 py-1 bg-slate-700/40 hover:bg-slate-700/80 text-slate-300 border border-slate-600/40 rounded text-[10px] font-semibold transition cursor-pointer"
+                    >
+                      Cek GR →
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Rich Card: Part List */}
+        {richCard?.type === 'part_list' && richCard.items && (
+          <div className="bg-slate-800/60 backdrop-blur border border-slate-700/50 rounded-xl p-4 shadow-lg space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span>📦</span> Master Price Parts Catalog ({richCard.entity})
+              </span>
+              <Link href="/agents/agent-1" className="text-[11px] font-bold text-blue-400 hover:text-blue-300 transition">
+                Buka Modul PS01 →
+              </Link>
+            </div>
+            <div className="space-y-1.5 max-h-56 overflow-y-auto">
+              {richCard.items.map((p: any) => (
+                <div key={p.part_number} className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2.5 border border-slate-700/40 text-xs">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-purple-300">{p.part_number}</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                        MOQ: {p.moq_threshold}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-300 font-medium truncate mt-0.5">{p.description}</div>
+                    <div className="text-[10px] text-slate-400">
+                      Biaya: <span className="font-bold text-emerald-400">${p.unit_cost} {p.currency}</span> • Wilayah: {p.entity_code}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onSuggestionClick?.(`Carikan harga ${p.part_number}`)}
+                    className="shrink-0 px-2.5 py-1 bg-purple-600/30 hover:bg-purple-600/60 text-purple-300 border border-purple-500/40 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                  >
+                    Hitung RFQ →
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Rich Card: Price Book List (Agent 4) */}
         {richCard?.type === 'price_book_list' && richCard.items && (
           <div className="bg-slate-800/60 backdrop-blur border border-slate-700/50 rounded-xl p-4 shadow-lg space-y-2.5">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 export interface ChatMessage {
   id: string;
@@ -36,6 +36,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const handlePersonaSwitched = () => {
+      setMessages([]);
+      setConversationId(null);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('batu:persona-switched', handlePersonaSwitched);
+      return () => window.removeEventListener('batu:persona-switched', handlePersonaSwitched);
+    }
+  }, []);
 
   const sendMessage = useCallback(async (message: string, entityCode: string) => {
     const userMsg: ChatMessage = {

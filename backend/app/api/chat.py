@@ -651,12 +651,69 @@ def keyword_intent_fallback(message: str) -> Dict[str, Any]:
 
 
 # ============================================================================
-# AGENT EXECUTION ROUTER
+# AGENT EXECUTION ROUTER & RBAC ENFORCEMENT
 # ============================================================================
+AGENT_TITLES = {
+    "agent_1": "Quotation & Dynamic Pricing (Agent 1)",
+    "agent_2": "Validasi Margin PO (Agent 2)",
+    "agent_3": "Evaluasi Risiko Keterlambatan RDD (Agent 3)",
+    "agent_4": "Radar Validitas Harga & Renewal (Agent 4)",
+    "agent_5": "Multi-Factor Vendor Scoring (Agent 5)",
+    "agent_6": "Penerimaan Barang & GR Split (Agent 6)",
+    "agent_7": "Triangle Trade POD & Pinjaman Stok (Agent 7)",
+    "agent_8": "Rekonsiliasi Bank FX Multivalas (Agent 8)",
+    "agent_9": "Cash Runway & Treasury Narrative (Agent 9)",
+}
+
+def get_role_suggested_actions(role: str, entity_code: str) -> List[str]:
+    role = (role or "admin").lower()
+    if role == "purchasing":
+        return [
+            "Carikan harga SFP-10G-LR",
+            "Cek margin PO-2026-4412",
+            "Cek radar validitas harga",
+            f"Evaluasi semua vendor entitas {entity_code}",
+            "Lihat antrean HITL"
+        ]
+    elif role == "sales":
+        return [
+            "Cek backlog SO-2026-4401",
+            f"Evaluasi risiko keterlambatan pengiriman {entity_code}",
+            "Lihat antrean HITL"
+        ]
+    elif role == "warehouse":
+        return [
+            "Cek GR PO-2026-9902",
+            "Verifikasi POD triangle trade",
+            "Cek pinjaman stok aktif",
+            "Lihat antrean HITL"
+        ]
+    elif role == "treasury":
+        return [
+            f"Cek runway kas operasional {entity_code}",
+            "Rekonsiliasi TXN-DBS-88319",
+            f"Analisis likuiditas kas {entity_code}",
+            "Lihat antrean HITL"
+        ]
+    elif role == "auditor":
+        return [
+            f"Lihat audit trail entitas {entity_code}",
+            "Verifikasi integritas log HITL",
+            "Lihat antrean HITL"
+        ]
+    else:  # admin / default
+        return [
+            f"Cek runway kas {entity_code}",
+            "Cek radar validitas harga",
+            "Lihat antrean HITL",
+            "Cek backlog SO-2026-4401",
+            "Rekonsiliasi TXN-DBS-88319"
+        ]
+
 async def execute_agent_logic(
-    intent: str, params: dict, entity_code: str, db_data: dict, pool
+    intent: str, params: dict, entity_code: str, db_data: dict, pool, current_user: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """Executes the appropriate deterministic engine and generates narrative."""
+    """Executes the appropriate deterministic engine, enforces RBAC, and generates narrative."""
     
     result: Dict[str, Any] = {
         "agent_used": None,
@@ -666,6 +723,26 @@ async def execute_agent_logic(
         "draft_action_id": None,
         "suggested_actions": []
     }
+
+    user_role = (current_user or {}).get("role", "admin").lower()
+    username = (current_user or {}).get("username", "user")
+
+    # --- RBAC Enforcement Gate ---
+    if intent in AGENT_ROLE_PERMISSIONS:
+        allowed_roles = AGENT_ROLE_PERMISSIONS.get(intent, [])
+        if allowed_roles and user_role != "admin" and user_role not in allowed_roles:
+            agent_title = AGENT_TITLES.get(intent, intent.upper())
+            allowed_str = ", ".join([r.upper() for r in allowed_roles])
+            result["reply"] = (
+                f"🚫 **Akses Dibatasi oleh Kebijakan RBAC**\n\n"
+                f"Operasi **{agent_title}** berada di luar wewenang peran Anda (**{user_role.upper()}**).\n\n"
+                f"• **Wewenang Diperlukan:** {allowed_str}\n"
+                f"• **Pengguna Aktif:** {username} ({user_role.upper()})\n"
+                f"• **Entitas:** {entity_code}\n\n"
+                f"Silakan gunakan operasi yang sesuai dengan peran Anda di bawah ini, atau hubungi Administrator jika memerlukan eskalasi izin."
+            )
+            result["suggested_actions"] = get_role_suggested_actions(user_role, entity_code)
+            return result
     
     # --- HITL Queue View ---
     if intent == "hitl_queue":
@@ -1013,27 +1090,70 @@ async def execute_agent_logic(
         return result
     
     # --- General / Fallback ---
-    result["reply"] = (
-        f"Halo! Saya adalah **Batu Networks Agentic AI** 🤖\n\n"
-        f"Saya dapat membantu Anda dengan operasi ERP berikut:\n\n"
-        f"• **Quotation & Pricing** — \"Carikan harga SFP-10G-LR\"\n"
-        f"• **Validasi Margin PO** — \"Cek margin PO-2026-4412\"\n"
-        f"• **Backlog Pengiriman** — \"Cek backlog SO-2026-4401\"\n"
-        f"• **Price Validity & Renewal** — \"Cek radar validitas harga\"\n"
-        f"• **Evaluasi Vendor** — \"Tampilkan skor vendor entitas {entity_code}\"\n"
-        f"• **Penerimaan Gudang** — \"Cek GR PO-2026-9902\"\n"
-        f"• **Triangle Trade** — \"Verifikasi POD triangle trade\"\n"
-        f"• **Pinjaman Stok** — \"Cek pinjaman stok aktif\"\n"
-        f"• **Rekonsiliasi Bank** — \"Rekonsiliasi TXN-DBS-88319\"\n"
-        f"• **Cash Flow** — \"Cek runway kas {entity_code}\"\n"
-        f"• **Ganti Entitas** — \"Pindah ke entitas VN\"\n"
-        f"• **HITL Queue & Audit** — \"Tampilkan antrean approval\"\n\n"
-        f"Ketik pertanyaan Anda dalam bahasa Indonesia atau Inggris. Entitas aktif: **{entity_code}**."
+    role_titles = {
+        "purchasing": "Procurement & Sourcing Specialist",
+        "sales": "Sales & Account Executive",
+        "warehouse": "Logistics & Warehouse Operations",
+        "treasury": "Treasury Controller & Financial Analyst",
+        "auditor": "Compliance & Audit Officer",
+        "admin": "Enterprise System Administrator"
+    }
+    role_title = role_titles.get(user_role, user_role.capitalize())
+    
+    greeting = (
+        f"Halo **{username}**! 👋 Saya adalah **Batu Networks Agentic AI** 🤖\n\n"
+        f"Anda terautentikasi sebagai **{user_role.upper()}** (*{role_title}*) pada entitas **{entity_code}**.\n\n"
     )
-    result["suggested_actions"] = [
-        "Cek cash flow", "Cek radar validitas harga", "Lihat antrean HITL", "Evaluasi semua vendor",
-        f"Cek backlog SO-2026-4401", "Ganti entitas ke VN"
-    ]
+
+    if user_role == "purchasing":
+        greeting += (
+            f"Wewenang operasional Anda mencakup modul **Purchasing & Pricing**:\n\n"
+            f"• **Quotation & Pricing (Agent 1)** — \"Carikan harga SFP-10G-LR\"\n"
+            f"• **Validasi Margin PO (Agent 2)** — \"Cek margin PO-2026-4412\"\n"
+            f"• **Radar Validitas Harga (Agent 4)** — \"Cek radar validitas harga\"\n"
+            f"• **Evaluasi Vendor (Agent 5)** — \"Tampilkan skor vendor entitas {entity_code}\"\n"
+            f"• **Otorisasi Draf HITL** — \"Tampilkan antrean approval\""
+        )
+    elif user_role == "sales":
+        greeting += (
+            f"Wewenang operasional Anda mencakup modul **Sales & Fulfillment**:\n\n"
+            f"• **Backlog Pengiriman (Agent 3)** — \"Cek backlog SO-2026-4401\"\n"
+            f"• **Evaluasi Risiko Delay RDD** — \"Evaluasi keterlambatan pengiriman\"\n"
+            f"• **Otorisasi Draf HITL** — \"Tampilkan antrean approval\""
+        )
+    elif user_role == "warehouse":
+        greeting += (
+            f"Wewenang operasional Anda mencakup modul **Warehouse & Logistics**:\n\n"
+            f"• **Penerimaan Barang & GR (Agent 6)** — \"Cek GR PO-2026-9902\"\n"
+            f"• **Triangle Trade POD (Agent 7)** — \"Verifikasi POD triangle trade\"\n"
+            f"• **Pinjaman Stok & Jatuh Tempo** — \"Cek pinjaman stok aktif\"\n"
+            f"• **Otorisasi Draf HITL** — \"Tampilkan antrean approval\""
+        )
+    elif user_role == "treasury":
+        greeting += (
+            f"Wewenang operasional Anda mencakup modul **Treasury & Cash Flow**:\n\n"
+            f"• **Runway Kas Operasional (Agent 9)** — \"Cek runway kas operasional {entity_code}\"\n"
+            f"• **Rekonsiliasi Bank FX (Agent 8)** — \"Rekonsiliasi TXN-DBS-88319\"\n"
+            f"• **Analisis Likuiditas & Fasilitas Kredit** — \"Analisis likuiditas kas\"\n"
+            f"• **Otorisasi Draf Treasury** — \"Tampilkan antrean approval\""
+        )
+    elif user_role == "auditor":
+        greeting += (
+            f"Wewenang operasional Anda mencakup modul **Governance & Compliance**:\n\n"
+            f"• **Audit Trail** — \"Lihat riwayat audit trail {entity_code}\"\n"
+            f"• **Verifikasi Log Integritas** — \"Verifikasi log keputusan HITL\"\n"
+            f"• **Pemeriksaan Antrean Otorisasi** — \"Tampilkan antrean approval\""
+        )
+    else:  # admin / superuser
+        greeting += (
+            f"Sebagai Administrator, Anda memiliki akses **penuh ke seluruh 9 agen ERP**, "
+            f"antrean HITL lintas departemen, dan audit trail global.\n\n"
+            f"Ketik instruksi apa pun atau pilih salah satu menu cepat di bawah ini:"
+        )
+
+    greeting += f"\n\nKetik pertanyaan Anda dalam bahasa Indonesia atau Inggris. Entitas aktif: **{entity_code}**."
+    result["reply"] = greeting
+    result["suggested_actions"] = get_role_suggested_actions(user_role, entity_code)
     return result
 
 
@@ -1139,8 +1259,8 @@ async def chat_message(req: ChatRequest, current_user: Dict[str, Any] = Depends(
     # 4. Lookup data from DB or in-memory
     db_data = await lookup_db_data(pool, intent, params, entity_code)
     
-    # 5. Execute agent logic
-    agent_result = await execute_agent_logic(intent, params, entity_code, db_data, pool)
+    # 5. Execute agent logic with RBAC enforcement
+    agent_result = await execute_agent_logic(intent, params, entity_code, db_data, pool, current_user=current_user)
     
     # 6. Save assistant message
     asst_msg_id = str(uuid.uuid4())

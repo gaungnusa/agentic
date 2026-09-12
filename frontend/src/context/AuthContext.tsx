@@ -118,15 +118,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(data.access_token);
         localStorage.setItem('batu_active_user', JSON.stringify(data.user));
         localStorage.setItem('batu_access_token', data.access_token);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('batu:persona-switched', { detail: data.user }));
+        }
       } else {
         // Fallback local switch
         setUser(matched);
         localStorage.setItem('batu_active_user', JSON.stringify(matched));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('batu:persona-switched', { detail: matched }));
+        }
       }
     } catch {
       // Fallback local switch if server offline
       setUser(matched);
       localStorage.setItem('batu_active_user', JSON.stringify(matched));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('batu:persona-switched', { detail: matched }));
+      }
     } finally {
       setLoading(false);
     }

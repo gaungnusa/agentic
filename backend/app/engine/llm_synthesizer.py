@@ -133,7 +133,40 @@ async def generate_grounded_draft(agent_id: str, entity_code: str, deterministic
         f"Konteks Tambahan: {raw_context}"
     )
 
-    # 1. Provider: OLLAMA (Local Self-Hosted di VPS)
+    # 1. Provider: OPENAI COMPATIBLE (Sumopod / Groq / OpenAI / vLLM)
+    if provider in ("openai_compatible", "openai", "sumopod"):
+        base_url = (getattr(settings, "OPENAI_BASE_URL", "https://ai.sumopod.com/v1") or "https://ai.sumopod.com/v1").rstrip("/")
+        model_name = getattr(settings, "OPENAI_MODEL", "qwen3.7-flash-2026-07-15")
+        api_key = (getattr(settings, "OPENAI_API_KEY", "") or "").strip()
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    f"{base_url}/chat/completions",
+                    headers=headers,
+                    json={
+                        "model": model_name,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_content}
+                        ],
+                        "temperature": 0.2
+                    }
+                )
+                if response.status_code == 200:
+                    res_json = response.json()
+                    return res_json["choices"][0]["message"]["content"].strip()
+                else:
+                    logger.warning(f"[LLM] OpenAI-compatible API returned HTTP {response.status_code}: {response.text[:200]}. Fallback ke narasi lokal.")
+                    return build_local_fallback_narrative(agent_id, entity_code, deterministic_data, raw_context)
+        except Exception as err:
+            logger.warning(f"[LLM] Gagal menghubungi OpenAI-compatible API ({type(err).__name__}). Menggunakan narasi deterministik lokal.")
+            return build_local_fallback_narrative(agent_id, entity_code, deterministic_data, raw_context)
+
+    # 2. Provider: OLLAMA (Local Self-Hosted di VPS)
     if provider == "ollama":
         base_url = (getattr(settings, "OLLAMA_BASE_URL", "http://127.0.0.1:11434") or "http://127.0.0.1:11434").rstrip("/")
         model_name = getattr(settings, "OLLAMA_MODEL", "qwen2.5:1.5b")

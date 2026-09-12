@@ -457,10 +457,46 @@ async def lookup_db_data(pool, intent: str, params: dict, entity_code: str) -> D
 # INTENT CLASSIFIER (CLAUDE API + FALLBACK)
 # ============================================================================
 async def classify_intent(message: str, entity_code: str) -> Dict[str, Any]:
-    """Uses Ollama (local) or Claude API for intent classification. Falls back to keyword matching."""
-    provider = getattr(settings, "LLM_PROVIDER", "ollama").lower().strip()
+    """Uses OpenAI-compatible (Sumopod), Ollama (local), or Claude API for intent classification. Falls back to keyword matching."""
+    provider = getattr(settings, "LLM_PROVIDER", "openai_compatible").lower().strip()
 
-    # 1. Ollama Intent Classifier
+    # 1. OpenAI Compatible (Sumopod / OpenAI / Groq)
+    if provider in ("openai_compatible", "openai", "sumopod"):
+        base_url = (getattr(settings, "OPENAI_BASE_URL", "https://ai.sumopod.com/v1") or "https://ai.sumopod.com/v1").rstrip("/")
+        model_name = getattr(settings, "OPENAI_MODEL", "qwen3.7-flash-2026-07-15")
+        api_key = (getattr(settings, "OPENAI_API_KEY", "") or "").strip()
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.post(
+                    f"{base_url}/chat/completions",
+                    headers=headers,
+                    json={
+                        "model": model_name,
+                        "messages": [
+                            {"role": "system", "content": INTENT_SYSTEM_PROMPT},
+                            {"role": "user", "content": f"Entity aktif: {entity_code}\nPesan user: {message}"}
+                        ],
+                        "temperature": 0.1
+                    }
+                )
+                if response.status_code == 200:
+                    text = response.json()["choices"][0]["message"]["content"].strip()
+                    if text.startswith("```"):
+                        text = text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+                    first_brace = text.find("{")
+                    last_brace = text.rfind("}")
+                    if first_brace != -1 and last_brace != -1:
+                        text = text[first_brace:last_brace+1]
+                    return json.loads(text)
+        except Exception as e:
+            logger.warning(f"[CHAT] OpenAI-compatible intent classification failed ({e}). Using keyword fallback.")
+            return keyword_intent_fallback(message)
+
+    # 2. Ollama Intent Classifier
     if provider == "ollama":
         base_url = (getattr(settings, "OLLAMA_BASE_URL", "http://127.0.0.1:11434") or "http://127.0.0.1:11434").rstrip("/")
         model_name = getattr(settings, "OLLAMA_MODEL", "qwen2.5:1.5b")

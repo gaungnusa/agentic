@@ -1,0 +1,29 @@
+batu-agentic-erp/
+├── docker/
+│   ├── podman-compose.yml
+│   └── init.sql
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── core/
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py
+│   │   │   └── database.py
+│   │   ├── schemas/
+│   │   │   ├── __init__.py
+│   │   │   └── agent_payloads.py
+│   │   ├── engine/
+│   │   │   ├── __init__.py
+│   │   │   ├── deterministic.py       # Hitungan pasti Python (Agen 1-9)
+│   │   │   └── llm_synthesizer.py     # Prompt Grounding & Anthropic Claude RAG
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── agents.py              # Endpoint trigger analisis agen
+│   │   │   └── hitl.py                # Endpoint Human-in-the-Loop Gateway
+│   │   └── worker.py                  # Polling scheduler 15-menit
+│   ├── requirements.txt
+│   └── .env.example
+├── mockups/                           # HTML prototype file (Agent 1-9, Flowchart)
+├── .gitignore
+└── README.md

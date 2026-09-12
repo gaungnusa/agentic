@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: docker.io/pgvector/pgvector:pg16
+    container_name: batu_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: batu_networks_erp_ai
+      POSTGRES_USER: orchestrator_admin
+      POSTGRES_PASSWORD: AdminBatuPassword2026!
+    ports:
+      - "54320:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  redis:
+    image: docker.io/library/redis:7-alpine
+    container_name: batu_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent 2: SO/PO Mismatch Pre-Checker - Batu Networks ERP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col p-6">
+
+  <!-- STANDARDIZED HEADER MATCHING AGENT 5 -->
+  <header class="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="flex items-center gap-6">
+      <div class="pr-6 border-r border-slate-200 flex items-center">
+        <img src="batu.PNG" alt="Batu Networks Pte. Ltd." class="h-10 w-auto object-contain" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='40' viewBox='0 0 140 40'><rect width='140' height='40' fill='%231e3a8a' rx='6'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-size='11' font-weight='bold' letter-spacing='0.5'>BATU NETWORKS</text></svg>';">
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">Sales & Purchase Order Management</h1>
+          <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">Agent 2: Active</span>
+        </div>
+        <p class="text-xs text-slate-500 font-medium flex items-center gap-2 mt-1">
+          <span class="flex items-center gap-1.5 text-emerald-600 font-semibold">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            SO/PO Mismatch Pre-Checker
+          </span>
+          <span class="text-slate-300">|</span>
+          <span>Module PS02 & Contract Verification</span>
+        </p>
+      </div>
+    </div>
+    
+    <div class="flex items-center">
+      <div class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg text-slate-600 text-xs flex items-center gap-2 shadow-sm">
+        <i class="fa-regular fa-clock text-slate-400"></i>
+        <span>Last Updated: <strong class="text-slate-800 font-semibold">02 Sep 2026, 21:15 WITA</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- METRICS BAR -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">Open POs Under Check</div>
+      <div class="text-2xl font-black text-slate-900 mt-1">24 Orders</div>
+      <div class="text-[11px] text-slate-500 mt-1">Cross-checked against sales back-to-back</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">Margin Variance Flags</div>
+      <div class="text-2xl font-black text-rose-600 mt-1">2 Flagged</div>
+      <div class="text-[11px] text-rose-600 font-semibold mt-1">&lt; 15% Minimum margin threshold</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">MOQ Rule Compliance</div>
+      <div class="text-2xl font-black text-emerald-600 mt-1">95.8%</div>
+      <div class="text-[11px] text-slate-500 mt-1">Tier pricing tiers auto-verified</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">Rework Cycle Reduction</div>
+      <div class="text-2xl font-black text-blue-600 mt-1">-70%</div>
+      <div class="text-[11px] text-slate-500 mt-1">PO revisions prior to Line Manager sign-off</div>
+    </div>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-blue-600"></i> PO Verification Queue (Pre-Approval Gate)
+        </h2>
+        <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded font-mono">Module PS02</span>
+      </div>
+
+      <div class="overflow-x-auto border border-slate-200 rounded-lg text-xs">
+        <table class="w-full text-left">
+          <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-3">PO Number</th>
+              <th class="p-3">Matched SO</th>
+              <th class="p-3">Supplier</th>
+              <th class="p-3">Cost vs Selling</th>
+              <th class="p-3">Gross Margin</th>
+              <th class="p-3">MOQ Rule</th>
+              <th class="p-3">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-700">
+            <tr class="bg-rose-50/40">
+              <td class="p-3 font-mono font-bold text-blue-600">PO-2026-4412</td>
+              <td class="p-3 font-mono">SO-2026-1182 (SK Telecom KR)</td>
+              <td class="p-3 font-semibold">Broadcom APAC</td>
+              <td class="p-3 font-mono">$108.50 / $120.00</td>
+              <td class="p-3 font-bold text-rose-600">9.5% (&lt; 15%)</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-semibold text-[10px]">Breached (350 / 500)</span></td>
+              <td class="p-3">
+                <button onclick="openDrawer('PO-2026-4412 Variance Remedy', 'Agent 2 detected margin erosion (9.5% vs 15% standard minimum) and an MOQ violation (350 pcs ordered vs 500 pcs vendor minimum).\n\nSuggested Remedy:\nIncrease order quantity to 500 pcs to qualify for Tier-2 pricing ($94.00/pc), restoring gross margin to 21.6%. Excess 150 pcs will cover buffer demand forecast for Q4.', 'Approve Quantity Adjustment')" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded font-bold text-[11px]">Remedy</button>
+              </td>
+            </tr>
+            <tr>
+              <td class="p-3 font-mono font-bold text-blue-600">PO-2026-4415</td>
+              <td class="p-3 font-mono">SO-2026-1190 (KT Corp KR)</td>
+              <td class="p-3 font-semibold">Amphenol SG</td>
+              <td class="p-3 font-mono">$42.00 / $58.00</td>
+              <td class="p-3 font-bold text-emerald-600">27.5%</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold text-[10px]">Compliant (1,000 pcs)</span></td>
+              <td class="p-3"><span class="text-slate-400 font-semibold text-[11px]">Ready to Submit</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- INTELLIGENCE PANEL -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+      <div class="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
+        <i class="fa-solid fa-robot text-blue-600"></i> Agent 2 Intelligence Summary
+      </div>
+      <h3 class="font-bold text-slate-900 text-sm">Contract Margin & MOQ Guardrail</h3>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Agent 2 secara proaktif membandingkan PO draf dengan SO pesanan pelanggan sebelum sampai ke manajer divisi. Jika profit margin berada di bawah batas standar atau melanggar MOQ, agen merekomendasikan penyesuaian kuantitas tier harga terbaik.
+      </p>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-xs">
+        <div class="font-bold text-slate-800">Rule Parameters Active:</div>
+        <div class="flex justify-between text-slate-600">
+          <span>Min Gross Margin Gate:</span>
+          <strong class="font-mono text-slate-900">15.0%</strong>
+        </div>
+        <div class="flex justify-between text-slate-600">
+          <span>MOQ Enforcement:</span>
+          <strong class="font-mono text-emerald-600">Strict Warning</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE-OVER HITL DRAWER -->
+  <div id="hitlDrawer" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex justify-end">
+    <div class="w-full max-w-lg bg-white h-full shadow-2xl p-6 flex flex-col justify-between overflow-y-auto">
+      <div>
+        <div class="flex justify-between items-start pb-4 border-b border-slate-200">
+          <div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">Human-in-the-Loop Gateway</span>
+            <h3 id="drawerTitle" class="text-base font-bold text-slate-900 mt-1">Review PO Action</h3>
+          </div>
+          <button onclick="closeDrawer()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="mt-4 space-y-4 text-xs">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Synthesized Recommendation Payload:</label>
+            <textarea id="drawerBody" rows="8" class="w-full p-3 font-mono text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none"></textarea>
+          </div>
+          <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-900 text-[11px]">
+            Operator: <strong>eko.suryahadi@batunetworks.com</strong> &bull; Entity: <strong>KR Branch</strong>
+          </div>
+        </div>
+      </div>
+      <div class="pt-4 border-t border-slate-200 flex gap-2 justify-end text-xs">
+        <button onclick="closeDrawer()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg font-semibold">Discard</button>
+        <button onclick="handleAction()" id="drawerSubmitBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow flex items-center gap-2">Authorize & Commit</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl text-xs flex items-center gap-3 hidden z-50 border border-slate-700">
+    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+    <span>PO adjustments authorized and committed to staging.</span>
+  </div>
+
+  <script>
+    function openDrawer(title, content, btnLabel) {
+      document.getElementById('drawerTitle').innerText = title;
+      document.getElementById('drawerBody').value = content;
+      document.getElementById('drawerSubmitBtn').innerHTML = `<i class="fa-solid fa-check"></i> ${btnLabel}`;
+      document.getElementById('hitlDrawer').classList.remove('hidden');
+    }
+    function closeDrawer() { document.getElementById('hitlDrawer').classList.add('hidden'); }
+    function handleAction() {
+      closeDrawer();
+      const toast = document.getElementById('toast');
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+  </script>
+</body>
+</html>

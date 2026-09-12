@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent 1: Quotation Response Assistant - Batu Networks ERP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col p-6">
+
+  <!-- STANDARDIZED HEADER MATCHING AGENT 5 -->
+  <header class="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="flex items-center gap-6">
+      <div class="pr-6 border-r border-slate-200 flex items-center">
+        <img src="batu.PNG" alt="Batu Networks Pte. Ltd." class="h-10 w-auto object-contain" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='40' viewBox='0 0 140 40'><rect width='140' height='40' fill='%231e3a8a' rx='6'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-size='11' font-weight='bold' letter-spacing='0.5'>BATU NETWORKS</text></svg>';">
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">Customer Quotation & RFQ Inbound</h1>
+          <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">Agent 1: Active</span>
+        </div>
+        <p class="text-xs text-slate-500 font-medium flex items-center gap-2 mt-1">
+          <span class="flex items-center gap-1.5 text-emerald-600 font-semibold">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Quotation Response Assistant
+          </span>
+          <span class="text-slate-300">|</span>
+          <span>Module PS01 & Sourcing Dispatcher</span>
+        </p>
+      </div>
+    </div>
+    
+    <div class="flex items-center">
+      <div class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg text-slate-600 text-xs flex items-center gap-2 shadow-sm">
+        <i class="fa-regular fa-clock text-slate-400"></i>
+        <span>Last Updated: <strong class="text-slate-800 font-semibold">02 Sep 2026, 21:15 WITA</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- METRICS BAR -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">Pending Customer RFQs</div>
+      <div class="text-2xl font-black text-slate-900 mt-1">6 Inquiries</div>
+      <div class="text-[11px] text-slate-500 mt-1">Awaiting quotation draft sign-off</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">Catalog Auto-Match Rate</div>
+      <div class="text-2xl font-black text-emerald-600 mt-1">83.3%</div>
+      <div class="text-[11px] text-slate-500 mt-1">Prices found in Master Price PS03</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">Parallel Sourcing Triggered</div>
+      <div class="text-2xl font-black text-blue-600 mt-1">1 RFQ</div>
+      <div class="text-[11px] text-blue-600 font-semibold mt-1">Dispatched to 3 approved suppliers</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">Avg Response Turnaround</div>
+      <div class="text-2xl font-black text-purple-600 mt-1">4.2 Mins</div>
+      <div class="text-[11px] text-slate-500 mt-1">Down from manual 3.5 hours</div>
+    </div>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-file-invoice-dollar text-blue-600"></i> Customer Inbound RFQ Processing Queue
+        </h2>
+        <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded font-mono">Module PS01</span>
+      </div>
+
+      <div class="overflow-x-auto border border-slate-200 rounded-lg text-xs">
+        <table class="w-full text-left">
+          <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-3">RFQ Ref</th>
+              <th class="p-3">Client</th>
+              <th class="p-3">Part Description</th>
+              <th class="p-3">Qty</th>
+              <th class="p-3">Master Price Match</th>
+              <th class="p-3">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-700">
+            <tr>
+              <td class="p-3 font-mono font-bold text-blue-600">RFQ-2026-0891</td>
+              <td class="p-3 font-semibold">Singtel Optus SG</td>
+              <td class="p-3">SFP+ 10G-LR Transceiver Module</td>
+              <td class="p-3 font-mono">250 pcs</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold text-[10px]">100% Found (USD 38.50)</span></td>
+              <td class="p-3">
+                <button onclick="openDrawer('Quotation Draft for Singtel Optus', 'Agent 1 synthesized official quotation draft:\n\n• Customer: Singtel Optus SG\n• Item: SFP+ 10G-LR Transceiver Module\n• Sourcing Unit Cost: USD 38.50 (PS03 Master Price)\n• Standard Gross Margin: 18.0%\n• Proposed Selling Price: USD 45.43 / pc\n• Total Quotation Value: USD 11,357.50\n\nReady for Sales Manager electronic sign-off.', 'Review & Send Quote')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold text-[11px]">Review Draft</button>
+              </td>
+            </tr>
+            <tr class="bg-amber-50/40">
+              <td class="p-3 font-mono font-bold text-blue-600">RFQ-2026-0894</td>
+              <td class="p-3 font-semibold">Viettel Telecom VN</td>
+              <td class="p-3">High-Density Patch Cord 48C Custom</td>
+              <td class="p-3 font-mono">1,200 pcs</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-semibold text-[10px]">Missing Price Record</span></td>
+              <td class="p-3">
+                <button onclick="openDrawer('Automated Parallel Sourcing RFQ', 'Agent 1 detected no catalog price in PS03 for custom 48C cord.\n\nAutomated Parallel Sourcing Package Ready:\n• Vendor 1: Amphenol SG\n• Vendor 2: Molex APAC\n• Vendor 3: CommScope Japan\n\nTrigger simultaneous sourcing RFQs to obtain benchmark pricing within 24 hours.', 'Trigger Sourcing RFQ')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-bold text-[11px]">Trigger Sourcing</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- INTELLIGENCE PANEL -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+      <div class="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
+        <i class="fa-solid fa-robot text-blue-600"></i> Agent 1 Intelligence Summary
+      </div>
+      <h3 class="font-bold text-slate-900 text-sm">Dual Quotation Dispatcher</h3>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Agent 1 memindai inquiry pelanggan secara otomatis. Jika part terdaftar di Master Price (PS03), agen langsung menghitung margin standar dan membuat draf penawaran resmi. Jika harga kosong, agen memicu RFQ paralel ke 3 supplier tanpa staf harus mengetik ulang.
+      </p>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-xs">
+        <div class="font-bold text-slate-800">Operational Logic Active:</div>
+        <div class="flex justify-between text-slate-600">
+          <span>Target Margin Standard:</span>
+          <strong class="font-mono text-slate-900">18.0% - 22.0%</strong>
+        </div>
+        <div class="flex justify-between text-slate-600">
+          <span>Parallel Supplier Quorum:</span>
+          <strong class="font-mono text-emerald-600">3 Vendors</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE-OVER HITL DRAWER -->
+  <div id="hitlDrawer" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex justify-end">
+    <div class="w-full max-w-lg bg-white h-full shadow-2xl p-6 flex flex-col justify-between overflow-y-auto">
+      <div>
+        <div class="flex justify-between items-start pb-4 border-b border-slate-200">
+          <div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">Human-in-the-Loop Gateway</span>
+            <h3 id="drawerTitle" class="text-base font-bold text-slate-900 mt-1">Review Quotation Action</h3>
+          </div>
+          <button onclick="closeDrawer()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="mt-4 space-y-4 text-xs">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Synthesized Quotation Payload:</label>
+            <textarea id="drawerBody" rows="8" class="w-full p-3 font-mono text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none"></textarea>
+          </div>
+          <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-900 text-[11px]">
+            Operator: <strong>eko.suryahadi@batunetworks.com</strong> &bull; Entity: <strong>SG HQ</strong>
+          </div>
+        </div>
+      </div>
+      <div class="pt-4 border-t border-slate-200 flex gap-2 justify-end text-xs">
+        <button onclick="closeDrawer()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg font-semibold">Discard</button>
+        <button onclick="handleAction()" id="drawerSubmitBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow flex items-center gap-2">Authorize & Execute</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl text-xs flex items-center gap-3 hidden z-50 border border-slate-700">
+    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+    <span>Quotation action authorized and recorded in immutable audit log.</span>
+  </div>
+
+  <script>
+    function openDrawer(title, content, btnLabel) {
+      document.getElementById('drawerTitle').innerText = title;
+      document.getElementById('drawerBody').value = content;
+      document.getElementById('drawerSubmitBtn').innerHTML = `<i class="fa-solid fa-check"></i> ${btnLabel}`;
+      document.getElementById('hitlDrawer').classList.remove('hidden');
+    }
+    function closeDrawer() { document.getElementById('hitlDrawer').classList.add('hidden'); }
+    function handleAction() {
+      closeDrawer();
+      const toast = document.getElementById('toast');
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+from pydantic_settings import BaseSettings
+from typing import List
+
+class Settings(BaseSettings):
+    ENVIRONMENT: str = "development"
+    DATABASE_URL: str = "postgresql://orchestrator_admin:AdminBatuPassword2026!@localhost:54320/batu_networks_erp_ai"
+    REDIS_URL: str = "redis://localhost:6379/0"
+    ANTHROPIC_API_KEY: str = ""
+    DEFAULT_LLM_MODEL: str = "claude-3-5-sonnet-20241022"
+    APP_PORT: int = 8000
+    ALLOWED_ENTITIES: List[str] = ["SG", "VN", "KR", "IN", "JP"]
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+    class Config:
+        env_file = ".env"
+        extra = "ignore"
+
+settings = Settings()

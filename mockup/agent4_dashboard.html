@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent 4: Price Validity & Renewal - Batu Networks ERP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col p-6">
+
+  <!-- STANDARDIZED HEADER MATCHING AGENT 5 -->
+  <header class="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="flex items-center gap-6">
+      <div class="pr-6 border-r border-slate-200 flex items-center">
+        <img src="batu.PNG" alt="Batu Networks Pte. Ltd." class="h-10 w-auto object-contain" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='40' viewBox='0 0 140 40'><rect width='140' height='40' fill='%231e3a8a' rx='6'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-size='11' font-weight='bold' letter-spacing='0.5'>BATU NETWORKS</text></svg>';">
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">Master Price Catalog & Pricing Policy</h1>
+          <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">Agent 4: Active</span>
+        </div>
+        <p class="text-xs text-slate-500 font-medium flex items-center gap-2 mt-1">
+          <span class="flex items-center gap-1.5 text-emerald-600 font-semibold">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Price Validity & Renewal Agent
+          </span>
+          <span class="text-slate-300">|</span>
+          <span>Module PS03 & 90-Day Schedule</span>
+        </p>
+      </div>
+    </div>
+    
+    <div class="flex items-center">
+      <div class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg text-slate-600 text-xs flex items-center gap-2 shadow-sm">
+        <i class="fa-regular fa-clock text-slate-400"></i>
+        <span>Last Updated: <strong class="text-slate-800 font-semibold">02 Sep 2026, 21:15 WITA</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- METRICS BAR -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">Active Master Price Books</div>
+      <div class="text-2xl font-black text-slate-900 mt-1">142 Books</div>
+      <div class="text-[11px] text-slate-500 mt-1">1,820 total registered SKUs</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">Expiring in 30 Days (H-30)</div>
+      <div class="text-2xl font-black text-amber-600 mt-1">4 Books</div>
+      <div class="text-[11px] text-amber-600 font-semibold mt-1">Bulk Excel templates auto-staged</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">Expired Rates Avoided</div>
+      <div class="text-2xl font-black text-emerald-600 mt-1">100%</div>
+      <div class="text-[11px] text-slate-500 mt-1">Zero quotation issued on outdated costs</div>
+    </div>
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="text-xs text-slate-400 font-semibold uppercase">Bulk Template Readiness</div>
+      <div class="text-2xl font-black text-blue-600 mt-1">Instant</div>
+      <div class="text-[11px] text-slate-500 mt-1">Pre-filled with Q3 index adjustments</div>
+    </div>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-days text-blue-600"></i> Master Price Validity Radar (90-Day Schedule)
+        </h2>
+        <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded font-mono">Module PS03</span>
+      </div>
+
+      <div class="overflow-x-auto border border-slate-200 rounded-lg text-xs">
+        <table class="w-full text-left">
+          <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-3">Vendor / Category</th>
+              <th class="p-3">Contract Ref</th>
+              <th class="p-3">Current Validity</th>
+              <th class="p-3">Days Left</th>
+              <th class="p-3">Status</th>
+              <th class="p-3">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-700">
+            <tr class="bg-amber-50/40">
+              <td class="p-3 font-semibold text-slate-900">Cisco Systems APAC (Optics & SFP)</td>
+              <td class="p-3 font-mono">MP-CS-2026-Q2</td>
+              <td class="p-3 font-mono">01 Jul - 30 Sep 2026</td>
+              <td class="p-3 font-bold text-rose-600">28 Days (H-28)</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-semibold text-[10px]">Expiring Soon</span></td>
+              <td class="p-3">
+                <button onclick="openDrawer('Bulk Renewal Pack for Cisco APAC', 'Agent 4 pre-filled the official ERP Excel upload template for 45 optical line items.\n\nSummary of Applied Parameters:\n• Previous Base Price Q2 referenced\n• Inflation Index adjustment of +2.1% pre-calculated\n• Currency: USD\n• Proposed Validity: 01 Oct 2026 - 31 Dec 2026\n\nReady to export bulk Excel file and dispatch renewal inquiry email to Cisco APAC representative.', 'Export Excel & Send Inquiry')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold text-[11px]">Generate Renewal Pack</button>
+              </td>
+            </tr>
+            <tr>
+              <td class="p-3 font-semibold text-slate-900">FiberHome Optical Cables</td>
+              <td class="p-3 font-mono">MP-FH-2026-Q3</td>
+              <td class="p-3 font-mono">15 Jul - 15 Oct 2026</td>
+              <td class="p-3 font-bold text-amber-600">43 Days</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold text-[10px]">Scheduled H-30</span></td>
+              <td class="p-3"><span class="text-slate-400 font-semibold text-[11px]">In Queue</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- INTELLIGENCE PANEL -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+      <div class="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
+        <i class="fa-solid fa-robot text-blue-600"></i> Agent 4 Intelligence Summary
+      </div>
+      <h3 class="font-bold text-slate-900 text-sm">Price Continuity Governance</h3>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Menghilangkan kerugian akibat penawaran harga menggunakan katalog kedaluwarsa. Begitu kontrak memasuki H-30, agen menyusun dokumen perpanjangan dengan format resmi mass-upload ERP.
+      </p>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-xs">
+        <div class="font-bold text-slate-800">Automated Actions:</div>
+        <div class="flex items-center gap-2 text-slate-600">
+          <i class="fa-solid fa-file-excel text-emerald-600"></i>
+          <span>Auto-generates bulk `.xlsx` template</span>
+        </div>
+        <div class="flex items-center gap-2 text-slate-600">
+          <i class="fa-solid fa-envelope text-blue-600"></i>
+          <span>Pre-drafts formal vendor re-negotiation email</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE-OVER HITL DRAWER -->
+  <div id="hitlDrawer" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex justify-end">
+    <div class="w-full max-w-lg bg-white h-full shadow-2xl p-6 flex flex-col justify-between overflow-y-auto">
+      <div>
+        <div class="flex justify-between items-start pb-4 border-b border-slate-200">
+          <div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">Human-in-the-Loop Gateway</span>
+            <h3 id="drawerTitle" class="text-base font-bold text-slate-900 mt-1">Review Price Action</h3>
+          </div>
+          <button onclick="closeDrawer()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="mt-4 space-y-4 text-xs">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Generated Renewal Payload:</label>
+            <textarea id="drawerBody" rows="8" class="w-full p-3 font-mono text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none"></textarea>
+          </div>
+          <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-900 text-[11px]">
+            Operator: <strong>eko.suryahadi@batunetworks.com</strong> &bull; Entity: <strong>SG HQ</strong>
+          </div>
+        </div>
+      </div>
+      <div class="pt-4 border-t border-slate-200 flex gap-2 justify-end text-xs">
+        <button onclick="closeDrawer()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg font-semibold">Discard</button>
+        <button onclick="handleAction()" id="drawerSubmitBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow flex items-center gap-2">Authorize & Export</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl text-xs flex items-center gap-3 hidden z-50 border border-slate-700">
+    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+    <span>Renewal pack exported and logged in immutable audit trail.</span>
+  </div>
+
+  <script>
+    function openDrawer(title, content, btnLabel) {
+      document.getElementById('drawerTitle').innerText = title;
+      document.getElementById('drawerBody').value = content;
+      document.getElementById('drawerSubmitBtn').innerHTML = `<i class="fa-solid fa-check"></i> ${btnLabel}`;
+      document.getElementById('hitlDrawer').classList.remove('hidden');
+    }
+    function closeDrawer() { document.getElementById('hitlDrawer').classList.add('hidden'); }
+    function handleAction() {
+      closeDrawer();
+      const toast = document.getElementById('toast');
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+  </script>
+</body>
+</html>
